@@ -1,0 +1,27 @@
+name: Lint GitHub Actions
+
+on:
+  pull_request:
+    paths: [ '.github/workflows/*.{yml,yaml}' ]
+  push:
+    paths: [ '.github/workflows/*.{yml,yaml}' ]
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+      - name: Download actionlint
+        run: |
+          set -euo pipefail
+          curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash \
+            | bash -s -- -b ./bin
+      - name: Run actionlint
+        run: ./bin/actionlint -color

@@ -1,0 +1,115 @@
+fr:
+  help:
+    title: "Vagrant Docker Hosts Manager"
+    usage: "Utilisation : vagrant hosts <apply|remove|view|help|version> [options]"
+    commands_header: "Commandes :"
+    options_header: "Options :"
+    topics_header: "Sujets d'aide :"
+    topic_header: "Aide : vagrant hosts %{topic}"
+    usage_label: "Utilisation :"
+    description_label: "Description :"
+    options_label: "Options :"
+    examples_label: "Exemples :"
+    commands:
+      apply:   "apply [IP] [DOMAIN]    Ajouter/mettre à jour des entrées dans le fichier hosts"
+      remove:  "remove [IP|DOMAIN]     Supprimer des entrées ou tout le bloc géré"
+      view:    "view [DOMAIN]          Afficher les entrées prévues/gérées"
+      version: "version                Afficher la version du plugin"
+      help:    "help [command]         Afficher l'Aide générale ou d'un sous-commande"
+    options:
+      json:      "--json                  Sortie JSON lisible par machine"
+      dry_run:   "--dry-run               Ne pas modifier le fichier hosts"
+      lang:      "--lang LANG             Forcer la langue (en|fr)"
+      no_emoji:  "--no-emoji              Désactiver les émojis dans la sortie CLI"
+      help:      "-h, --help              Afficher l'aide"
+    topic:
+      apply:
+        title: "apply"
+        usage: "vagrant hosts apply <IP> <DOMAIN>"
+        description: >
+          Ajoute ou met à jour le mapping fourni dans le bloc géré pour la VM cible.
+          Si aucun mapping n'est fourni, les valeurs du Vagrantfile (docker_hosts) sont utilisées.
+          Les deux paramètres sont validés : IPv4 (ex. 172.28.100.2) et DOMAINE (ex. example.test).
+        options:
+          json:    "--json                Sortie JSON (machine-readable)"
+          dryrun:  "--dry-run             Ne pas modifier le fichier hosts"
+          lang:    "--lang <en|fr>        Forcer la langue"
+          noemoji: "--no-emoji            Désactiver les émojis dans la sortie"
+        examples:
+          - "vagrant hosts apply 172.28.100.2 flowfind.noesi.local"
+          - "vagrant hosts apply 172.28.100.3 flowfind3.noesi.local default"
+      remove:
+        title: "remove"
+        usage: "vagrant hosts remove [<IP>|<DOMAIN>]"
+        description: >
+          Supprime un mapping par IP ou DOMAINE. Si aucun paramètre n'est fourni, une confirmation
+          est demandée avant de supprimer TOUTES les entrées gérées pour la VM (invite : yes/No).
+          Le format du paramètre est validé (IPv4 ou DOMAINE).
+        options:
+          json:    "--json                Sortie JSON (machine-readable)"
+          dryrun:  "--dry-run             Ne pas modifier le fichier hosts"
+          lang:    "--lang <en|fr>        Forcer la langue"
+          noemoji: "--no-emoji            Désactiver les émojis dans la sortie"
+        examples:
+          - "vagrant hosts remove 172.28.100.2"
+          - "vagrant hosts remove flowfind.noesi.local"
+          - "vagrant hosts remove   # demande une confirmation pour TOUT supprimer"
+      view:
+        title: "view"
+        usage: "vagrant hosts view"
+        description: >
+          Affiche les entrées prévues (depuis le Vagrantfile) et les entrées gérées présentes
+          dans le fichier hosts. Affiche des paires uniques IP → DOMAINE.
+        options:
+          json:    "--json                Sortie JSON (machine-readable)"
+          dryrun:  "--dry-run             Ne pas modifier le fichier hosts"
+          lang:    "--lang <en|fr>        Forcer la langue"
+          noemoji: "--no-emoji            Désactiver les émojis dans la sortie"
+        examples:
+          - "vagrant hosts view"
+          - "vagrant hosts view default"
+      version:
+        title: "version"
+        usage: "vagrant hosts version"
+        description: "Affiche la version du plugin."
+        options: {}
+        examples:
+          - "vagrant hosts version"
+      help:
+        title: "help"
+        usage: "vagrant hosts help [apply|remove|view|version|help]"
+        description: "Afficher l'aide générale ou l'aide détaillée d'une sous-commande."
+        options: {}
+        examples:
+          - "vagrant hosts help"
+          - "vagrant hosts help apply"
+
+  messages:
+    no_entries: "Aucune entrée hosts configurée."
+    applied: "Entrées hosts appliquées."
+    removed_count: "%{count} entrée(s) supprimée(s)."
+    cleaned: "Entrées gérées supprimées."
+    nothing_to_clean: "Rien à nettoyer."
+    missing_ip_for: "Aucune IP configurée pour %{domain} ; ignoré."
+    detected_ip: "IP détectée pour %{domain} : %{ip}."
+    no_ip_found: "Aucune IP trouvée pour %{domain} (conteneur : %{container})."
+    lang_set: "Langue définie sur %{lang}."
+    no_change: "Rien à appliquer. Déjà à jour."
+    invalid_ip: "Adresse IPv4 invalide : %{ip}"
+    invalid_host: "Hôte/FQDN invalide : %{host}"
+    missing_mapping: "Fournissez l'IP et le FQDN (ex. `vagrant hosts apply 1.2.3.4 example.test`)."
+    invalid_key: "IP ou FQDN invalide : %{key}"
+    view_header: "Entrées hosts prévues :"
+    view_managed_header: "Entrées hosts gérées :"
+    apply_summary: "Ajoutées : %{a}, Modifiées : %{u}, Inchangées : %{s}"
+    remove_expected_format: "Format attendu : IPv4 (ex. 172.28.100.2) ou FQDN (ex. example.test)."
+    confirm_remove_all: "Cela va supprimer TOUTES les entrées gérées pour %{vm}. Continuer ? (yes/NO)"
+    remove_all_cancelled: "Annulé. Rien supprimé."
+    remove_none: "Aucune entrée correspondante à supprimer."
+
+  errors:
+    no_machine: "Aucune machine cible trouvée. Lancez cette commande dans un projet Vagrant ou indiquez un nom de VM."
+    not_admin: "Droits administrateur/root requis pour modifier le fichier hosts : %{path}."
+
+  log:
+    version_line: "vagrant-docker-hosts-manager version %{version}"

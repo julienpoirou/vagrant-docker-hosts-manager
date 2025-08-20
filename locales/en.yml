@@ -1,0 +1,114 @@
+en:
+  help:
+    title: "Vagrant Docker Hosts Manager"
+    usage: "Usage: vagrant hosts <apply|remove|view|help|version> [options]"
+    commands_header: "Commands:"
+    options_header: "Options:"
+    topics_header: "Help topics:"
+    topic_header: "Help: vagrant hosts %{topic}"
+    usage_label: "Usage:"
+    description_label: "Description:"
+    options_label: "Options:"
+    examples_label: "Examples:"
+    commands:
+      apply:   "apply [IP] [DOMAIN]    Add/update entries in hosts file"
+      remove:  "remove [IP|DOMAIN]     Remove entries or the whole managed block"
+      view:    "view [DOMAIN]          Show planned/managed hosts entries"
+      version: "version                Display plugin version"
+      help:    "help [DOMAIN]          Show help or subcommands help"
+    options:
+      json:      "--json                  Machine-readable JSON output"
+      lang:      "--lang LANG             Force language (en|fr)"
+      no_emoji:  "--no-emoji              Disable emoji in CLI output"
+      help:      "-h, --help              Show help"
+    topic:
+      apply:
+        title: "apply"
+        usage: "vagrant hosts apply <IP> <DOMAIN>"
+        description: >
+          Add or update the given mapping in the managed block for the target VM.
+          If no mapping is given, values from the Vagrantfile (docker_hosts) are used.
+          The command validates both parameters: IPv4 (e.g. 172.28.100.2) and DOMAIN (e.g. example.test).
+        options:
+          json:    "--json                Output machine-readable JSON"
+          dryrun:  "--dry-run             Do not modify hosts file"
+          lang:    "--lang <en|fr>        Force language"
+          noemoji: "--no-emoji            Disable emoji in CLI output"
+        examples:
+          - "vagrant hosts apply 172.28.100.2 flowfind.noesi.local"
+          - "vagrant hosts apply 172.28.100.3 flowfind3.noesi.local default"
+      remove:
+        title: "remove"
+        usage: "vagrant hosts remove [<IP>|<DOMAIN>]"
+        description: >
+          Remove one mapping by IP or DOMAIN. If no parameter is provided, you will be asked
+          to confirm removing ALL managed entries for the VM (prompt: yes/No).
+          The parameter format is validated (IPv4 or DOMAIN).
+        options:
+          json:    "--json                Output machine-readable JSON"
+          dryrun:  "--dry-run             Do not modify hosts file"
+          lang:    "--lang <en|fr>        Force language"
+          noemoji: "--no-emoji            Disable emoji in CLI output"
+        examples:
+          - "vagrant hosts remove 172.28.100.2"
+          - "vagrant hosts remove flowfind.noesi.local"
+          - "vagrant hosts remove   # will ask for confirmation to remove ALL"
+      view:
+        title: "view"
+        usage: "vagrant hosts view"
+        description: >
+          Display planned entries (from Vagrantfile) and managed entries currently present
+          in the hosts file. Shows unique pairs IP → DOMAIN.
+        options:
+          json:    "--json                Output machine-readable JSON"
+          dryrun:  "--dry-run             Do not modify hosts file"
+          lang:    "--lang <en|fr>        Force language"
+          noemoji: "--no-emoji            Disable emoji in CLI output"
+        examples:
+          - "vagrant hosts view"
+          - "vagrant hosts view default"
+      version:
+        title: "version"
+        usage: "vagrant hosts version"
+        description: "Print the plugin version."
+        options: {}
+        examples:
+          - "vagrant hosts version"
+      help:
+        title: "help"
+        usage: "vagrant hosts help [apply|remove|view|version|help]"
+        description: "Show general help or detailed help for a specific subcommand."
+        options: {}
+        examples:
+          - "vagrant hosts help"
+          - "vagrant hosts help apply"
+
+  messages:
+    no_entries: "No hosts entries configured."
+    applied: "Hosts entries applied."
+    removed_count: "%{count} entries removed."
+    cleaned: "Managed hosts entries removed."
+    nothing_to_clean: "Nothing to clean."
+    missing_ip_for: "No IP configured for %{domain}; skipping."
+    detected_ip: "Detected IP for %{domain}: %{ip}."
+    no_ip_found: "No IP found for %{domain} (container: %{container})."
+    lang_set: "Language set to %{lang}."
+    no_change: "Nothing to apply. Already up-to-date."
+    invalid_ip: "Invalid IPv4 address: %{ip}"
+    invalid_host: "Invalid host/DOMAIN: %{host}"
+    missing_mapping: "Provide both IP and DOMAIN (e.g. `vagrant hosts apply 1.2.3.4 example.test`)."
+    invalid_key: "Invalid IP or DOMAIN: %{key}"
+    view_header: "Planned hosts entries:"
+    view_managed_header: "Managed hosts entries:"
+    apply_summary: "Added: %{a}, Updated: %{u}, Unchanged: %{s}"
+    remove_expected_format: "Expected IPv4 (e.g. 172.28.100.2) or DOMAIN (e.g. example.test)."
+    confirm_remove_all: "This will remove ALL managed hosts entries for %{vm}. Continue? (yes/NO)"
+    remove_all_cancelled: "Cancelled. Nothing removed."
+    remove_none: "No matching entry to remove."
+
+  errors:
+    no_machine: "No target machine found. Run this inside a Vagrant project or pass a VM name."
+    not_admin: "Administrator/root privileges required to modify hosts at %{path}."
+
+  log:
+    version_line: "vagrant-docker-hosts-manager version %{version}"

@@ -1,0 +1,27 @@
+# Normaliser tout le texte en LF dans le repo
+*           text eol=lf
+
+# Langages / conf
+*.rb        text eol=lf
+*.sh        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.md        text eol=lf
+*.json      text eol=lf
+*.gemspec   text eol=lf
+Gemfile     text eol=lf
+Rakefile    text eol=lf
+Makefile    text eol=lf
+
+# Spécifiques Windows (gardés en CRLF si tu en as)
+*.bat       text eol=crlf
+*.ps1       text eol=crlf
+
+# Binaires (jamais transformés)
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.pdf       binary
+*.zip       binary
+*.gem       binary

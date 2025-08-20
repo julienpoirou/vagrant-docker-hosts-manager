@@ -1,0 +1,61 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Build gem
+        run: |
+          set -euo pipefail
+          gem build vagrant-docker-hosts-manager.gemspec
+          ls -1 *.gem > gemfile.txt
+
+      - name: Upload gem as CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gem
+          path: '*.gem'
+
+      - name: Publish to RubyGems
+        if: ${{ secrets.RUBYGEMS_API_KEY }}
+        env:
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.gem
+          printf -- "---\n:rubygems_api_key: ${RUBYGEMS_API_KEY}\n" > ~/.gem/credentials
+          chmod 0600 ~/.gem/credentials
+          gem push "$(cat gemfile.txt)"
+
+      - name: Publish to GitHub Packages (RubyGems)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.gem
+          printf -- "---\n:github: Bearer ${GITHUB_TOKEN}\n" > ~/.gem/credentials
+          chmod 0600 ~/.gem/credentials
+          gem push --key github --host "https://rubygems.pkg.github.com/${OWNER}" "$(cat gemfile.txt)"
+
+      - name: Upload gem to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release upload "${{ github.event.release.tag_name }}" "$(cat gemfile.txt)" --clobber
