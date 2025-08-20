@@ -7,6 +7,7 @@
 [![License](https://img.shields.io/github/license/julienpoirou/vagrant-docker-hosts-manager.svg)](LICENSE.md)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196.svg)](https://www.conventionalcommits.org)
 [![Renovate](https://img.shields.io/badge/Renovate-enabled-brightgreen.svg)](https://renovatebot.com)
+[![Total downloads](https://img.shields.io/gem/dt/vagrant-docker-hosts-manager?logo=rubygems&label=downloads)](https://rubygems.org/gems/vagrant-docker-hosts-manager)
 
 Vagrant plugin to **manage custom hostnames** by updating the local `hosts` file (Windows/Linux/macOS) for Docker‑based environments.
 
