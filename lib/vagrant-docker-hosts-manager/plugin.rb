@@ -39,7 +39,6 @@ module VagrantDockerHostsManager
 
     [:machine_action_up, :machine_action_provision, :machine_action_reload].each do |hook_name|
       action_hook(:vdhm_apply, hook_name) do |hook|
-        hook.after(Vagrant::Action::Builtin::Provision, Action::Apply)
         hook.append(Action::Apply)
       end
     end
@@ -63,20 +62,20 @@ module VagrantDockerHostsManager
 
         entries = compute_entries(env, cfg, ui)
         if entries.empty?
-          ui.info(::I18n.t("messages.no_entries"))
-          return @app.call(env)
+          UiHelpers.say(ui, ::I18n.t("messages.no_entries"))
+          return
         end
 
         if dry
           Util::Json.emit(action: "apply", status: "dry-run", data: { owner: mid, entries: entries })
-          return @app.call(env)
+          return
         end
 
         hoster.apply(entries)
         Util::Json.emit(action: "apply", status: "success", data: { owner: mid, entries: entries })
-      rescue => e
+      rescue StandardError => e
         Util::Json.emit(action: "apply", status: "error", error: e.message, backtrace: e.backtrace&.first(3))
-        ui&.error("VDHM: #{e.message}") || puts("VDHM: #{e.message}")
+        UiHelpers.error(ui, "VDHM: #{e.message}")
       ensure
         @app.call(env)
       end
@@ -89,7 +88,7 @@ module VagrantDockerHostsManager
         cfg.domains.each do |domain, ip|
           next if domain.to_s.strip.empty?
           if ip.nil? || ip.to_s.strip.empty?
-            ui&.warn(::I18n.t("messages.missing_ip_for", domain: domain))
+            UiHelpers.warn(ui, ::I18n.t("messages.missing_ip_for", domain: domain))
             next
           end
           entries[domain] = ip
@@ -102,10 +101,10 @@ module VagrantDockerHostsManager
             end
           end
           if ip && !ip.strip.empty?
-            ui&.info(::I18n.t("messages.detected_ip", domain: cfg.domain, ip: ip))
+            UiHelpers.say(ui, ::I18n.t("messages.detected_ip", domain: cfg.domain, ip: ip))
             entries[cfg.domain] = ip
           else
-            ui&.warn(::I18n.t("messages.no_ip_found", domain: cfg.domain, container: cfg.container_name))
+            UiHelpers.warn(ui, ::I18n.t("messages.no_ip_found", domain: cfg.domain, container: cfg.container_name))
           end
         end
 
@@ -125,15 +124,14 @@ module VagrantDockerHostsManager
 
         if dry
           Util::Json.emit(action: "cleanup", status: "dry-run", data: { owner: mid })
-          return @app.call(env)
+          return
         end
 
         removed = hoster.remove!
         Util::Json.emit(action: "cleanup", status: "success", data: { owner: mid, removed: removed })
-        ui.info(::I18n.t("messages.cleaned"))
-      rescue => e
+      rescue StandardError => e
         Util::Json.emit(action: "cleanup", status: "error", error: e.message)
-        ui.error("VDHM: #{e.message}")
+        UiHelpers.error(ui, "VDHM: #{e.message}")
       ensure
         @app.call(env)
       end

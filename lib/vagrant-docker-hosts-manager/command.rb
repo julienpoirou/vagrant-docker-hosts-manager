@@ -18,7 +18,7 @@ module VagrantDockerHostsManager
         i = raw_argv.index { |x| x =~ /\A(?:help|--help|-h)\z/ }
         cand = (i && raw_argv[i + 1]) ? raw_argv[i + 1] : nil
         (cand && cand !~ /\A-/) ? cand : nil
-      rescue
+      rescue StandardError
         nil
       end
 
@@ -274,7 +274,7 @@ module VagrantDockerHostsManager
         print_help(@env.ui, no_emoji: opts[:no_emoji])
         return 0
       end
-    rescue => e
+    rescue StandardError => e
       Util::Json.emit(action: "command", status: "error", error: e.message)
       1
     end
@@ -294,7 +294,7 @@ module VagrantDockerHostsManager
         $stdout.print(line)
         $stdout.flush
         answer = ($stdin.gets || "").to_s
-      rescue
+      rescue StandardError
         answer = ""
       ensure
         $stdout.puts ""

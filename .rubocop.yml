@@ -1,5 +1,7 @@
+inherit_from: .rubocop_todo.yml
+
 AllCops:
-  TargetRubyVersion: 3.4
+  TargetRubyVersion: 3.1
   NewCops: enable
   SuggestExtensions: false
   Exclude:
@@ -8,9 +10,6 @@ AllCops:
 
 plugins:
   - rubocop-rspec
-
-inherit_from:
-  - .rubocop_todo.yml
 
 inherit_mode:
   merge:
@@ -21,20 +20,9 @@ Metrics/BlockLength:
   Exclude:
     - 'spec/**/*'
 
-Metrics/ClassLength:
-  Exclude:
-    - 'lib/vagrant-docker-hosts-manager/command.rb'
-
-Metrics/MethodLength:
-  Exclude:
-    - 'lib/vagrant-docker-hosts-manager/command.rb'
-
 Metrics/AbcSize:
   Exclude:
     - 'lib/vagrant-docker-hosts-manager/command.rb'
-
-Layout/LineLength:
-  Max: 120
 
 Layout/LineLength:
   Enabled: false

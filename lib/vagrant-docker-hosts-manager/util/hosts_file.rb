@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "base64"
 require "tempfile"
 require "time"
 require "open3"
@@ -62,7 +63,11 @@ module VagrantDockerHostsManager
 
       def compose_block(entries, newline: "\n")
         start, stop = block_markers
-        ts = (Time.now.utc.iso8601 rescue Time.now.utc.to_s)
+        ts = begin
+               Time.now.utc.iso8601
+             rescue StandardError
+               Time.now.utc.to_s
+             end
 
         header = [
           start,
@@ -216,7 +221,7 @@ module VagrantDockerHostsManager
         begin
           data = File.binread(pth)
           UiHelpers.debug(@ui, "File.binread ok, bytes=#{data.bytesize}, encoding=#{data.encoding}")
-        rescue => e
+        rescue StandardError => e
           UiHelpers.debug(@ui, "File.binread error: #{e.class}: #{e.message}")
           data = nil
         end
@@ -253,7 +258,7 @@ module VagrantDockerHostsManager
                    .force_encoding("Windows-1252")
                    .encode(Encoding::UTF_8, invalid: :replace, undef: :replace, replace: "")
             UiHelpers.debug(@ui, "Transcoded via Windows-1252 -> UTF-8, encoding=#{data.encoding}")
-          rescue => e2
+          rescue StandardError => e2
             UiHelpers.debug(@ui, "Windows-1252 fallback failed: #{e2.class}: #{e2.message}")
             data = data.force_encoding(Encoding::UTF_8)
           end
@@ -265,7 +270,7 @@ module VagrantDockerHostsManager
         end
 
         data
-      rescue => e
+      rescue StandardError => e
         UiHelpers.debug(@ui, "read() fatal: #{e.class}: #{e.message}")
         ""
       end
@@ -429,7 +434,7 @@ module VagrantDockerHostsManager
         else
           begin
             Process.euid == 0
-          rescue
+          rescue StandardError
             false
           end
         end
@@ -446,31 +451,32 @@ module VagrantDockerHostsManager
         begin
           tf.binmode
           tf.write(content); tf.flush
-          system("sudo cp #{tf.path} #{real_path}") || raise("sudo copy failed")
+          system("sudo", "cp", tf.path, real_path) || raise("sudo copy failed")
         ensure
           tf.close!
         end
       end
 
       def write_windows(content)
-        tf = Tempfile.new("vdhm-hosts")
-        begin
-          tf.binmode
-          tf.write(content); tf.flush
-          ps = <<~POW
-            $ErrorActionPreference = "Stop"
-            Copy-Item -LiteralPath '#{tf.path.gsub("'", "''")}' -Destination '#{real_path.gsub("'", "''")}' -Force
-          POW
-          system(%{powershell -NoProfile -NonInteractive -Command #{Util::Docker.shell_escape(ps)}}) ||
-            system(
-              %{
-                powershell -NoProfile -NonInteractive -Command
-                "Start-Process PowerShell -Verb RunAs -ArgumentList #{Util::Docker.shell_escape(ps)}"
-              }.strip
-            ) || raise("elevated copy failed")
-        ensure
-          tf.close!
-        end
+        b64  = Base64.strict_encode64(
+          content.encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+        )
+        dest = real_path.gsub("'", "''")
+
+        ps = <<~POW
+          $ErrorActionPreference = "Stop"
+          $bytes = [System.Convert]::FromBase64String('#{b64}')
+          [System.IO.File]::WriteAllBytes('#{dest}', $bytes)
+        POW
+        encoded = Base64.strict_encode64(ps.encode("UTF-16LE"))
+        _out, _err, st = Open3.capture3("powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded)
+        return if st.success?
+
+        elev_ps      = "Start-Process PowerShell -Verb RunAs -Wait " \
+                       "-ArgumentList '-NonInteractive', '-NoProfile', '-EncodedCommand', '#{encoded}'"
+        elev_encoded = Base64.strict_encode64(elev_ps.encode("UTF-16LE"))
+        system("powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", elev_encoded) ||
+          raise("elevated write failed")
       end
     end
   end

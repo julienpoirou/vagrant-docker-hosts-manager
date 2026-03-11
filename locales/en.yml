@@ -109,6 +109,7 @@ en:
   errors:
     no_machine: "No target machine found. Run this inside a Vagrant project or pass a VM name."
     not_admin: "Administrator/root privileges required to modify hosts at %{path}."
+    invalid_locale: "Locale must be 'en' or 'fr'."
 
   log:
     version_line: "vagrant-docker-hosts-manager version %{version}"
