@@ -9,6 +9,7 @@ module VagrantDockerHostsManager
 
     SUPPORTED      = [:en, :fr].freeze
     OUR_NAMESPACES = %w[messages. errors. log. help.].freeze
+    NS             = "vdhm"
 
     EMOJI = {
       success:  "✅",
@@ -31,6 +32,9 @@ module VagrantDockerHostsManager
 
       base  = File.expand_path("../../locales", __dir__)
       paths = Dir[File.join(base, "*.yml")]
+      if paths.empty? && File.directory?(base)
+        paths = Dir.children(base).grep(/\.ya?ml\z/).map { |file| File.join(base, file) }
+      end
       ::I18n.load_path |= paths
       ::I18n.available_locales = SUPPORTED
 
@@ -60,22 +64,28 @@ module VagrantDockerHostsManager
       set_locale!("en")
     end
 
+    def namespaced(key)
+      k = key.to_s
+      k.start_with?("#{NS}.") ? k : "#{NS}.#{k}"
+    end
+
     def t(key, **opts)
-      ::I18n.t(key, **opts)
+      setup_i18n!
+      ::I18n.t(namespaced(key), **opts)
     end
 
     def t!(key, **opts)
       setup_i18n!
-      k = key.to_s
-      if our_key?(k) && !::I18n.exists?(k, ::I18n.locale)
-        raise MissingTranslationError, "#{EMOJI[:error]} [#{::I18n.locale}] Missing translation for key: #{k}"
+      nk = namespaced(key)
+      if our_key?(key.to_s) && !::I18n.exists?(nk, ::I18n.locale)
+        raise MissingTranslationError, "#{EMOJI[:error]} [#{::I18n.locale}] Missing translation for key: #{nk}"
       end
-      ::I18n.t(k, **opts)
+      ::I18n.t(nk, **opts)
     end
 
     def t_hash(key)
       setup_i18n!
-      v = ::I18n.t(key, default: {})
+      v = ::I18n.t(namespaced(key), default: {})
       v.is_a?(Hash) ? v : {}
     end
 
