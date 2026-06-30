@@ -27,7 +27,6 @@ RSpec.describe 'VagrantDockerHostsManager::Action' do
     { machine: machine, ui: ui, vdhm_hosts_path: hosts_path }
   end
 
-
   before do
     allow(VagrantDockerHostsManager::Util::Json).to receive(:emit)
     allow(VagrantDockerHostsManager::UiHelpers).to receive(:setup_i18n!)

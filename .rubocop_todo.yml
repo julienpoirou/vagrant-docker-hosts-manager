@@ -208,6 +208,8 @@ Naming/PredicateMethod:
 # Configuration parameters: CountAsOne.
 RSpec/ExampleLength:
   Max: 19
+  CountAsOne:
+    - heredoc
 
 # Offense count: 1
 # Configuration parameters: EnforcedStyle.
