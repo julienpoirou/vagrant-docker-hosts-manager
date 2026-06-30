@@ -10,6 +10,11 @@ AllCops:
 
 plugins:
   - rubocop-rspec
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
 
 inherit_mode:
   merge:

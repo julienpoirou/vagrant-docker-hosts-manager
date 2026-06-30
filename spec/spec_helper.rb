@@ -26,7 +26,6 @@ rescue LoadError
   module VagrantDockerHostsManager
     module Util
       module Docker
-        def self.shell_escape(s) = "'" + s.to_s.gsub("'", "''") + "'"
         def self.ip_for_container(_name) = ""
       end
     end

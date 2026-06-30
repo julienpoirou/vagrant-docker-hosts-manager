@@ -33,7 +33,7 @@ module VagrantDockerHostsManager
         begin
           if env[:ui] && env[:machine]&.config&.docker_hosts&.respond_to?(:verbose) &&
              env[:machine].config.docker_hosts.verbose
-            env[:ui].info(::I18n.t("messages.lang_set", lang: ::I18n.locale))
+            env[:ui].info(::I18n.t("vdhm.messages.lang_set", lang: ::I18n.locale))
           end
         rescue StandardError
           nil

@@ -1,4 +1,3 @@
-# spec/hosts_file_spec.rb
 # frozen_string_literal: true
 
 require "spec_helper"
@@ -129,6 +128,27 @@ RSpec.describe VagrantDockerHostsManager::Util::HostsFile do
     end
   end
 
+  describe "#strip_managed_blocks (remove --all)" do
+    it "drops every managed block regardless of owner, keeping unmanaged lines" do
+      before = [
+        "127.0.0.1 keepme.local",
+        "# >>> vagrant-docker-hosts-manager aaaa1111 (managed) >>>",
+        "# Managed by Vagrant - do not edit manually",
+        "127.0.0.1 ghost-a.local",
+        "# <<< vagrant-docker-hosts-manager aaaa1111 (managed) <<<",
+        "# >>> vagrant-docker-hosts-manager bbbb2222 (managed) >>>",
+        "127.0.0.1 ghost-b.local",
+        "# <<< vagrant-docker-hosts-manager bbbb2222 (managed) <<<"
+      ].join("\n") + "\n"
+
+      out = hoster.send(:strip_managed_blocks, before)
+      expect(out).to include("127.0.0.1 keepme.local")
+      expect(out).not_to include("ghost-a.local")
+      expect(out).not_to include("ghost-b.local")
+      expect(out).not_to include("(managed)")
+    end
+  end
+
   describe "#entries_in_blocks / #list_pairs" do
     it "parses ip+fqdn lines within managed block" do
       content = managed_block(["8.8.8.8 dns.test", "9.9.9.9 dns2.test"])
@@ -138,6 +158,38 @@ RSpec.describe VagrantDockerHostsManager::Util::HostsFile do
         "dns2.test" => ["9.9.9.9"]
       })
       expect(hoster.list_pairs(:current)).to include(["8.8.8.8", "dns.test", owner])
+    end
+  end
+
+  describe "scope handling across owners (unified scanner)" do
+    def block_for(owner_id, lines, nl: "\n")
+      ([
+        "# >>> vagrant-docker-hosts-manager #{owner_id} (managed) >>>",
+        "# Managed by Vagrant - do not edit manually",
+      ] + lines + [
+        "# <<< vagrant-docker-hosts-manager #{owner_id} (managed) <<<",
+      ]).join(nl) + nl
+    end
+
+    it ":current only sees the current owner's block, :all sees every owner (CRLF tolerant)" do
+      content =
+        block_for(owner, ["1.1.1.1 mine.test"], nl: "\r\n") +
+        "10.0.0.1 unmanaged.host\r\n" +
+        block_for("other-vm", ["2.2.2.2 theirs.test"], nl: "\r\n")
+      allow(hoster).to receive(:read).and_return(content)
+
+      expect(hoster.list_pairs(:current)).to eq([["1.1.1.1", "mine.test", owner]])
+
+      all = hoster.list_pairs(:all)
+      expect(all).to include(["1.1.1.1", "mine.test", owner])
+      expect(all).to include(["2.2.2.2", "theirs.test", "other-vm"])
+      expect(all.map { |ip, _, _| ip }).not_to include("10.0.0.1")
+    end
+
+    it "de-duplicates repeated ips per domain in entries_in_blocks" do
+      content = managed_block(["8.8.8.8 dns.test", "8.8.8.8 dns.test", "9.9.9.9 dns.test"])
+      allow(hoster).to receive(:read).and_return(content)
+      expect(hoster.entries_in_blocks(:current)).to eq({ "dns.test" => ["8.8.8.8", "9.9.9.9"] })
     end
   end
 
@@ -163,6 +215,45 @@ RSpec.describe VagrantDockerHostsManager::Util::HostsFile do
       allow(Open3).to receive(:capture3)
         .and_return(["false", "", instance_double(Process::Status, success?: true)])
       expect(hoster.elevated?).to be(false)
+    end
+  end
+
+  describe "#write_windows elevation" do
+    before do
+      allow(Gem).to receive(:win_platform?).and_return(true)
+      allow(hoster).to receive(:real_path).and_return("C:/Windows/System32/drivers/etc/hosts")
+    end
+
+    def ok_status = instance_double(Process::Status, success?: true)
+    def fail_status = instance_double(Process::Status, success?: false)
+
+    it "writes directly without launching UAC when already elevated" do
+      allow(Open3).to receive(:capture3).and_return(["", "", ok_status])
+      expect(hoster).not_to receive(:system)
+      expect { hoster.send(:write_windows, "127.0.0.1 a.test\n") }.not_to raise_error
+    end
+
+    it "propagates the elevated process exit code via -PassThru (not the launcher's)" do
+      allow(Open3).to receive(:capture3).and_return(["", "denied", fail_status])
+      captured = nil
+      allow(hoster).to receive(:system) { |*args|
+        captured = args
+        true
+      }
+
+      hoster.send(:write_windows, "127.0.0.1 a.test\n")
+
+      idx     = captured.index("-EncodedCommand")
+      decoded = Base64.strict_decode64(captured[idx + 1]).force_encoding("UTF-16LE").encode("UTF-8")
+      expect(decoded).to include("-PassThru")
+      expect(decoded).to include("exit $p.ExitCode")
+    end
+
+    it "raises when the elevated write fails (UAC declined or write error)" do
+      allow(Open3).to receive(:capture3).and_return(["", "denied", fail_status])
+      allow(hoster).to receive(:system).and_return(false)
+      expect { hoster.send(:write_windows, "127.0.0.1 a.test\n") }
+        .to raise_error(/elevated write failed/)
     end
   end
 end

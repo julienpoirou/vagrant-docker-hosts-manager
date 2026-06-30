@@ -11,6 +11,8 @@ require_relative "util/hosts_file"
 require_relative "util/docker"
 require_relative "util/json"
 require_relative "util/i18n"
+require_relative "actions/apply"
+require_relative "actions/cleanup"
 
 begin
   I18n.enforce_available_locales = false
@@ -45,96 +47,6 @@ module VagrantDockerHostsManager
 
     action_hook(:vdhm_cleanup, :machine_action_destroy) do |hook|
       hook.prepend(Action::Cleanup)
-    end
-  end
-
-  module Action
-    class Apply
-      def initialize(app, env) = (@app = app)
-
-      def call(env)
-        Util::I18n.setup!(env)
-        cfg    = env[:machine].config.docker_hosts
-        mid    = env[:machine].id || "unknown"
-        dry    = Util::I18n.env_flag("VDHM_DRY_RUN")
-        ui     = env[:ui]
-        hoster = Util::HostsFile.new(env, owner_id: mid)
-
-        entries = compute_entries(env, cfg, ui)
-        if entries.empty?
-          UiHelpers.say(ui, ::I18n.t("messages.no_entries"))
-          return
-        end
-
-        if dry
-          Util::Json.emit(action: "apply", status: "dry-run", data: { owner: mid, entries: entries })
-          return
-        end
-
-        hoster.apply(entries)
-        Util::Json.emit(action: "apply", status: "success", data: { owner: mid, entries: entries })
-      rescue StandardError => e
-        Util::Json.emit(action: "apply", status: "error", error: e.message, backtrace: e.backtrace&.first(3))
-        UiHelpers.error(ui, "VDHM: #{e.message}")
-      ensure
-        @app.call(env)
-      end
-
-      private
-
-      def compute_entries(env, cfg, ui)
-        entries = {}
-
-        cfg.domains.each do |domain, ip|
-          next if domain.to_s.strip.empty?
-          if ip.nil? || ip.to_s.strip.empty?
-            UiHelpers.warn(ui, ::I18n.t("messages.missing_ip_for", domain: domain))
-            next
-          end
-          entries[domain] = ip
-        end
-
-        if cfg.domain && !cfg.domain.strip.empty?
-          ip = cfg.ip || begin
-            if cfg.container_name && !cfg.container_name.strip.empty?
-              Util::Docker.ip_for_container(cfg.container_name)
-            end
-          end
-          if ip && !ip.strip.empty?
-            UiHelpers.say(ui, ::I18n.t("messages.detected_ip", domain: cfg.domain, ip: ip))
-            entries[cfg.domain] = ip
-          else
-            UiHelpers.warn(ui, ::I18n.t("messages.no_ip_found", domain: cfg.domain, container: cfg.container_name))
-          end
-        end
-
-        entries
-      end
-    end
-
-    class Cleanup
-      def initialize(app, env) = (@app = app)
-
-      def call(env)
-        Util::I18n.setup!(env)
-        mid    = env[:machine].id || "unknown"
-        dry    = Util::I18n.env_flag("VDHM_DRY_RUN")
-        ui     = env[:ui]
-        hoster = Util::HostsFile.new(env, owner_id: mid)
-
-        if dry
-          Util::Json.emit(action: "cleanup", status: "dry-run", data: { owner: mid })
-          return
-        end
-
-        removed = hoster.remove!
-        Util::Json.emit(action: "cleanup", status: "success", data: { owner: mid, removed: removed })
-      rescue StandardError => e
-        Util::Json.emit(action: "cleanup", status: "error", error: e.message)
-        UiHelpers.error(ui, "VDHM: #{e.message}")
-      ensure
-        @app.call(env)
-      end
     end
   end
 end
