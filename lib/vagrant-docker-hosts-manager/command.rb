@@ -39,9 +39,7 @@ module VagrantDockerHostsManager
       dispatch(action, argv, opts, help_topic)
     rescue StandardError => e
       Util::Json.emit(action: "command", status: "error", error: e.message)
-      unless opts[:json]
-        UiHelpers.error(@env.ui, "#{UiHelpers.e(:error, no_emoji: opts[:no_emoji])} #{e.message}")
-      end
+      UiHelpers.error(@env.ui, "#{UiHelpers.e(:error, no_emoji: opts[:no_emoji])} #{e.message}") unless opts[:json]
       1
     end
 
@@ -400,7 +398,7 @@ module VagrantDockerHostsManager
       return print_topic_help(ui, topic.to_s.downcase.strip, no_emoji: no_emoji) if topic && !topic.to_s.strip.empty?
 
       emoji_info = UiHelpers.e(:info, no_emoji: no_emoji)
-      title = ::I18n.t("vdhm.help.title",  default: "Vagrant Docker Hosts Manager")
+      title = ::I18n.t("vdhm.help.title", default: "Vagrant Docker Hosts Manager")
       UiHelpers.say(ui, "#{emoji_info} #{title}")
 
       UiHelpers.say(ui, ::I18n.t("vdhm.help.usage",
