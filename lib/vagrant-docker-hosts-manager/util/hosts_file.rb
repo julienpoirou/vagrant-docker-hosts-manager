@@ -33,10 +33,13 @@ module VagrantDockerHostsManager
       end
 
       def path_candidates
+        # VDHM_HOSTS_PATH overrides the default location on every platform
+        # (used by tests and power users); honor it before anything else.
+        return [override_path] if override_path
+        return [POSIX_PATH] unless Gem.win_platform?
+
         # Sysnative lets a 32-bit Ruby process reach the real System32 hosts
         # file on 64-bit Windows; keep it before System32/SysWOW64.
-        return [POSIX_PATH] unless Gem.win_platform?
-        return [override_path] if override_path
         [WIN_SYSNATIVE_PATH, WIN_SYS32_PATH, WIN_SYSWOW64_PATH]
       end
 
