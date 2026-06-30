@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
     "rubygems_mfa_required" => "true",
     "bug_tracker_uri"       => "https://github.com/julienpoirou/vagrant-docker-hosts-manager/issues",
     "changelog_uri"         => "https://github.com/julienpoirou/vagrant-docker-hosts-manager/blob/main/CHANGELOG.md",
+    "documentation_uri"     => "https://www.rubydoc.info/gems/vagrant-docker-hosts-manager/",
     "source_code_uri"       => "https://github.com/julienpoirou/vagrant-docker-hosts-manager",
     "homepage_uri"          => "https://github.com/julienpoirou/vagrant-docker-hosts-manager"
   }
