@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name        = "vagrant-docker-hosts-manager"
-  s.version     = File.read(File.join(__dir__, "lib/vagrant-docker-hosts-manager/VERSION")).strip
+  s.version     = File.read(File.join(__dir__, "lib/vagrant-docker-hosts-manager/VERSION")).split("#").first.strip
   s.summary     = "Manage /etc/hosts (or Windows hosts) entries for Docker/Vagrant projects safely"
   s.description = "Adds `vagrant hosts` command and lifecycle hooks to apply/remove managed hosts " \
                   "entries with ownership markers, JSON output, i18n, and safe cleanup."
