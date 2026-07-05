@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/julienpoirou/vagrant-docker-hosts-manager/compare/v0.4.1...v0.4.2) (2026-07-05)
+
+
+### Corrections 🐛
+
+* Keep lib/VERSION in sync via release-please's x-release-please-version annotation ([c593dbb](https://github.com/julienpoirou/vagrant-docker-hosts-manager/commit/c593dbb79a4d92502c3eb78a1972e0608198993d))
+
 ## [0.4.1](https://github.com/julienpoirou/vagrant-docker-hosts-manager/compare/v0.4.0...v0.4.1) (2026-07-05)
 
 
