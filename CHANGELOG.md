@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/julienpoirou/vagrant-docker-hosts-manager/compare/v0.4.0...v0.4.1) (2026-07-05)
+
+
+### Corrections 🐛
+
+* Wire the workflow_dispatch tag input and make Publish release-safe ([53c3beb](https://github.com/julienpoirou/vagrant-docker-hosts-manager/commit/53c3beb47eff1ebbd8d6df5ec45809f2027d627e))
+
 ## [0.4.0](https://github.com/julienpoirou/vagrant-docker-hosts-manager/compare/v0.3.0...v0.4.0) (2026-06-30)
 
 
